@@ -251,12 +251,19 @@
   margin-bottom: 1rem;
   border-bottom: 2px dotted var(--ink-black);
   padding-bottom: 0.5rem;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .device-name {
   font-family: 'Rye', 'Georgia', serif;
   font-size: 1.2rem;
   color: var(--barber-red);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 }
 
 .device-badge {
