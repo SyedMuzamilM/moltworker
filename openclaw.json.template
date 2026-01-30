@@ -1,0 +1,11 @@
+{
+  "agents": {
+    "defaults": {
+      "workspace": "/root/openclaw"
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local"
+  }
+}

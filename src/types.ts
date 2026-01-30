@@ -1,23 +1,22 @@
 import type { Sandbox } from '@cloudflare/sandbox';
 
 /**
- * Environment bindings for the Moltbot Worker
+ * Environment bindings for the OpenClaw Worker
  */
-export interface MoltbotEnv {
+export interface OpenClawEnv {
   Sandbox: DurableObjectNamespace<Sandbox>;
   ASSETS: Fetcher; // Assets binding for admin UI static files
-  MOLTBOT_BUCKET: R2Bucket; // R2 bucket for persistent storage
-  // AI Gateway configuration (preferred)
-  AI_GATEWAY_API_KEY?: string; // API key for the provider configured in AI Gateway
-  AI_GATEWAY_BASE_URL?: string; // AI Gateway URL (e.g., https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/openai)
-  // Legacy direct provider configuration (fallback)
-  MOONSHOT_API_KEY?: string;
-  MOONSHOT_BASE_URL?: string;
-  OPENAI_API_KEY?: string;
-  MOLTBOT_GATEWAY_TOKEN?: string; // Gateway token (mapped to CLAWDBOT_GATEWAY_TOKEN for container)
+  OPENCLAW_BUCKET: R2Bucket; // R2 bucket for persistent storage
+  // Moonshot AI configuration for Kimi K2.5 models
+  MOONSHOT_API_KEY?: string; // Moonshot API key for Kimi K2.5 models
+  MOONSHOT_BASE_URL?: string; // Optional: Moonshot API base URL (defaults to https://api.moonshot.ai/v1)
+  // Kimi Code configuration (separate from Moonshot)
+  KIMICODE_API_KEY?: string; // Kimi Code API key for coding-optimized model
+  KIMICODE_BASE_URL?: string; // Optional: defaults to https://api.kimi.com/coding/v1
+  OPENCLAW_GATEWAY_TOKEN?: string; // Gateway token (mapped to OPENCLAW_GATEWAY_TOKEN for container)
 
-  CLAWDBOT_BIND_MODE?: string;
-  DEV_MODE?: string; // Set to 'true' for local dev (skips CF Access auth + moltbot device pairing)
+  OPENCLAW_BIND_MODE?: string;
+  DEV_MODE?: string; // Set to 'true' for local dev (skips CF Access auth + OpenClaw device pairing)
   DEBUG_ROUTES?: string; // Set to 'true' to enable /debug/* routes
   SANDBOX_SLEEP_AFTER?: string; // How long before sandbox sleeps: 'never' (default), or duration like '10m', '1h'
   TELEGRAM_BOT_TOKEN?: string;
@@ -51,7 +50,7 @@ export interface AccessUser {
  * Hono app environment type
  */
 export type AppEnv = {
-  Bindings: MoltbotEnv;
+  Bindings: OpenClawEnv;
   Variables: {
     sandbox: Sandbox;
     accessUser?: AccessUser;

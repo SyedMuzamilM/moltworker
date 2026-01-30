@@ -241,7 +241,7 @@ if (preferOpenAI) {
     config.models.providers = config.models.providers || {};
     const providerConfig = {
         baseUrl: moonshotBaseUrl,
-        api: 'openai-chat',
+        api: 'openai-responses',
         models: [
             { id: 'kimi-k2.5', name: 'Kimi K2.5', contextWindow: 256000 },
         ]

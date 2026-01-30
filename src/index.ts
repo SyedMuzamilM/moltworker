@@ -1,20 +1,22 @@
 /**
- * Moltbot + Cloudflare Sandbox
+ * OpenClaw + Cloudflare Sandbox
  *
- * This Worker runs Moltbot personal AI assistant in a Cloudflare Sandbox container.
- * It proxies all requests to the Moltbot Gateway's web UI and WebSocket endpoint.
+ * This Worker runs OpenClaw personal AI assistant in a Cloudflare Sandbox container.
+ * It proxies all requests to the OpenClaw Gateway's web UI and WebSocket endpoint.
  *
  * Features:
  * - Web UI (Control Dashboard + WebChat) at /
  * - WebSocket support for real-time communication
  * - Admin UI at /_admin/ for device management
+ * - Kimi K2.5 AI model support via Moonshot AI
  * - Configuration via environment secrets
  *
  * Required secrets (set via `wrangler secret put`):
- * - MOONSHOT_API_KEY: Your Moonshot API key
+ * - KIMICODE_API_KEY: Your Kimi Code API key (get from https://kimi.com/)
  *
  * Optional secrets:
- * - MOLTBOT_GATEWAY_TOKEN: Token to protect gateway access
+ * - MOONSHOT_API_KEY: Your Moonshot API key for Kimi K2.5 models
+ * - OPENCLAW_GATEWAY_TOKEN: Token to protect gateway access
  * - TELEGRAM_BOT_TOKEN: Telegram bot token
  * - DISCORD_BOT_TOKEN: Discord bot token
  * - SLACK_BOT_TOKEN + SLACK_APP_TOKEN: Slack tokens
@@ -23,10 +25,10 @@
 import { Hono } from 'hono';
 import { getSandbox, Sandbox, type SandboxOptions } from '@cloudflare/sandbox';
 
-import type { AppEnv, MoltbotEnv } from './types';
-import { MOLTBOT_PORT } from './config';
+import type { AppEnv, OpenClawEnv } from './types';
+import { OPENCLAW_PORT } from './config';
 import { createAccessMiddleware } from './auth';
-import { ensureMoltbotGateway, findExistingMoltbotProcess, syncToR2 } from './gateway';
+import { ensureOpenClawGateway, findExistingOpenClawProcess, syncToR2 } from './gateway';
 import { publicRoutes, api, adminUi, debug, cdp } from './routes';
 import loadingPageHtml from './assets/loading.html';
 import configErrorHtml from './assets/config-error.html';
@@ -52,11 +54,11 @@ export { Sandbox };
  * Validate required environment variables.
  * Returns an array of missing variable descriptions, or empty array if all are set.
  */
-function validateRequiredEnv(env: MoltbotEnv): string[] {
+function validateRequiredEnv(env: OpenClawEnv): string[] {
   const missing: string[] = [];
 
-  if (!env.MOLTBOT_GATEWAY_TOKEN) {
-    missing.push('MOLTBOT_GATEWAY_TOKEN');
+  if (!env.OPENCLAW_GATEWAY_TOKEN) {
+    missing.push('OPENCLAW_GATEWAY_TOKEN');
   }
 
   if (!env.CF_ACCESS_TEAM_DOMAIN) {
@@ -67,15 +69,9 @@ function validateRequiredEnv(env: MoltbotEnv): string[] {
     missing.push('CF_ACCESS_AUD');
   }
 
-  // Check for AI Gateway or direct Moonshot configuration
-  if (env.AI_GATEWAY_API_KEY) {
-    // AI Gateway requires both API key and base URL
-    if (!env.AI_GATEWAY_BASE_URL) {
-      missing.push('AI_GATEWAY_BASE_URL (required when using AI_GATEWAY_API_KEY)');
-    }
-  } else if (!env.MOONSHOT_API_KEY) {
-    // Direct Moonshot access requires API key
-    missing.push('MOONSHOT_API_KEY or AI_GATEWAY_API_KEY');
+  // Check for Kimi Code API key (required for default AI)
+  if (!env.KIMICODE_API_KEY) {
+    missing.push('KIMICODE_API_KEY (required for Kimi Code AI - the default model)');
   }
 
   return missing;
@@ -92,16 +88,22 @@ function validateRequiredEnv(env: MoltbotEnv): string[] {
  *   npx wrangler secret put SANDBOX_SLEEP_AFTER
  *   # Enter: 10m (or 1h, 30m, etc.)
  */
-function buildSandboxOptions(env: MoltbotEnv): SandboxOptions {
+function buildSandboxOptions(env: OpenClawEnv): SandboxOptions {
   const sleepAfter = env.SANDBOX_SLEEP_AFTER?.toLowerCase() || 'never';
+  
+  // Configure container timeouts - gateway takes time to start
+  const containerTimeouts = {
+    portReadyTimeoutMS: 180_000, // 3 minutes for gateway startup
+    instanceGetTimeoutMS: 60_000, // 1 minute for container provisioning
+  };
   
   // 'never' means keep the container alive indefinitely
   if (sleepAfter === 'never') {
-    return { keepAlive: true };
+    return { keepAlive: true, containerTimeouts };
   }
   
   // Otherwise, use the specified duration
-  return { sleepAfter };
+  return { sleepAfter, containerTimeouts };
 }
 
 // Main app
@@ -115,6 +117,7 @@ const app = new Hono<AppEnv>();
 app.use('*', async (c, next) => {
   const url = new URL(c.req.url);
   console.log(`[REQ] ${c.req.method} ${url.pathname}${url.search}`);
+  console.log(`[REQ] Has KIMICODE_API_KEY: ${!!c.env.KIMICODE_API_KEY}`);
   console.log(`[REQ] Has MOONSHOT_API_KEY: ${!!c.env.MOONSHOT_API_KEY}`);
   console.log(`[REQ] DEV_MODE: ${c.env.DEV_MODE}`);
   console.log(`[REQ] DEBUG_ROUTES: ${c.env.DEBUG_ROUTES}`);
@@ -124,7 +127,7 @@ app.use('*', async (c, next) => {
 // Middleware: Initialize sandbox for all requests
 app.use('*', async (c, next) => {
   const options = buildSandboxOptions(c.env);
-  const sandbox = getSandbox(c.env.Sandbox, 'moltbot', options);
+  const sandbox = getSandbox(c.env.Sandbox, 'openclaw', options);
   c.set('sandbox', sandbox);
   await next();
 });
@@ -220,7 +223,7 @@ app.all('*', async (c) => {
   console.log('[PROXY] Handling request:', url.pathname);
 
   // Check if gateway is already running
-  const existingProcess = await findExistingMoltbotProcess(sandbox);
+  const existingProcess = await findExistingOpenClawProcess(sandbox);
   const isGatewayReady = existingProcess !== null && existingProcess.status === 'running';
   
   // For browser requests (non-WebSocket, non-API), show loading page if gateway isn't ready
@@ -232,7 +235,7 @@ app.all('*', async (c) => {
     
     // Start the gateway in the background (don't await)
     c.executionCtx.waitUntil(
-      ensureMoltbotGateway(sandbox, c.env).catch((err: Error) => {
+      ensureOpenClawGateway(sandbox, c.env).catch((err: Error) => {
         console.error('[PROXY] Background gateway start failed:', err);
       })
     );
@@ -241,22 +244,22 @@ app.all('*', async (c) => {
     return c.html(loadingPageHtml);
   }
 
-  // Ensure moltbot is running (this will wait for startup)
+  // Ensure OpenClaw is running (this will wait for startup)
   try {
-    await ensureMoltbotGateway(sandbox, c.env);
+    await ensureOpenClawGateway(sandbox, c.env);
   } catch (error) {
-    console.error('[PROXY] Failed to start Moltbot:', error);
+    console.error('[PROXY] Failed to start OpenClaw:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
     let hint = 'Check worker logs with: wrangler tail';
-    if (!c.env.MOONSHOT_API_KEY) {
-      hint = 'MOONSHOT_API_KEY is not set. Run: wrangler secret put MOONSHOT_API_KEY';
+    if (!c.env.KIMICODE_API_KEY) {
+      hint = 'KIMICODE_API_KEY is not set (required for default AI). Run: wrangler secret put KIMICODE_API_KEY';
     } else if (errorMessage.includes('heap out of memory') || errorMessage.includes('OOM')) {
       hint = 'Gateway ran out of memory. Try again or check for memory leaks.';
     }
 
     return c.json({
-      error: 'Moltbot gateway failed to start',
+      error: 'OpenClaw gateway failed to start',
       details: errorMessage,
       hint,
     }, 503);
@@ -268,8 +271,17 @@ app.all('*', async (c) => {
     console.log('[WS] URL:', request.url);
     console.log('[WS] Search params:', url.search);
     
+    // Inject gateway token into WebSocket URL if configured
+    let wsRequest = request;
+    if (c.env.OPENCLAW_GATEWAY_TOKEN) {
+      const wsUrl = new URL(request.url);
+      wsUrl.searchParams.set('token', c.env.OPENCLAW_GATEWAY_TOKEN);
+      console.log('[WS] Injecting token into WebSocket URL');
+      wsRequest = new Request(wsUrl.toString(), request);
+    }
+    
     // Get WebSocket connection to the container
-    const containerResponse = await sandbox.wsConnect(request, MOLTBOT_PORT);
+    const containerResponse = await sandbox.wsConnect(wsRequest, OPENCLAW_PORT);
     console.log('[WS] wsConnect response status:', containerResponse.status);
     
     // Get the container-side WebSocket
@@ -366,12 +378,12 @@ app.all('*', async (c) => {
   }
 
   console.log('[HTTP] Proxying:', url.pathname + url.search);
-  const httpResponse = await sandbox.containerFetch(request, MOLTBOT_PORT);
+  const httpResponse = await sandbox.containerFetch(request, OPENCLAW_PORT);
   console.log('[HTTP] Response status:', httpResponse.status);
   
   // Add debug header to verify worker handled the request
   const newHeaders = new Headers(httpResponse.headers);
-  newHeaders.set('X-Worker-Debug', 'proxy-to-moltbot');
+  newHeaders.set('X-Worker-Debug', 'proxy-to-openclaw');
   newHeaders.set('X-Debug-Path', url.pathname);
   
   return new Response(httpResponse.body, {
@@ -383,15 +395,15 @@ app.all('*', async (c) => {
 
 /**
  * Scheduled handler for cron triggers.
- * Syncs moltbot config/state from container to R2 for persistence.
+ * Syncs OpenClaw config/state from container to R2 for persistence.
  */
 async function scheduled(
   _event: ScheduledEvent,
-  env: MoltbotEnv,
+  env: OpenClawEnv,
   _ctx: ExecutionContext
 ): Promise<void> {
   const options = buildSandboxOptions(env);
-  const sandbox = getSandbox(env.Sandbox, 'moltbot', options);
+  const sandbox = getSandbox(env.Sandbox, 'openclaw', options);
 
   console.log('[cron] Starting backup sync to R2...');
   const result = await syncToR2(sandbox, env);

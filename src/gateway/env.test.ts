@@ -9,87 +9,41 @@ describe('buildEnvVars', () => {
     expect(result).toEqual({});
   });
 
-  it('includes MOONSHOT_API_KEY when set directly', () => {
+  it('includes MOONSHOT_API_KEY when set', () => {
     const env = createMockEnv({ MOONSHOT_API_KEY: 'sk-test-key' });
     const result = buildEnvVars(env);
     expect(result.MOONSHOT_API_KEY).toBe('sk-test-key');
   });
 
-  it('maps AI_GATEWAY_API_KEY to MOONSHOT_API_KEY for gateway by default', () => {
-    const env = createMockEnv({
-      AI_GATEWAY_API_KEY: 'sk-gateway-key',
-      AI_GATEWAY_BASE_URL: 'https://gateway.ai.cloudflare.com/v1/123/my-gw/openai',
+  it('includes MOONSHOT_BASE_URL when set', () => {
+    const env = createMockEnv({ 
+      MOONSHOT_API_KEY: 'sk-test-key',
+      MOONSHOT_BASE_URL: 'https://api.moonshot.cn/v1' 
     });
     const result = buildEnvVars(env);
-    expect(result.MOONSHOT_API_KEY).toBe('sk-gateway-key');
-    expect(result.MOONSHOT_BASE_URL).toBe('https://gateway.ai.cloudflare.com/v1/123/my-gw/openai');
-    expect(result.OPENAI_API_KEY).toBeUndefined();
+    expect(result.MOONSHOT_BASE_URL).toBe('https://api.moonshot.cn/v1');
   });
 
-  it('maps AI_GATEWAY_API_KEY to OPENAI_API_KEY when OpenAI is preferred', () => {
+  it('maps OPENCLAW_GATEWAY_TOKEN for container', () => {
+    const env = createMockEnv({ OPENCLAW_GATEWAY_TOKEN: 'my-token' });
+    const result = buildEnvVars(env);
+    expect(result.OPENCLAW_GATEWAY_TOKEN).toBe('my-token');
+  });
+
+  it('maps DEV_MODE to OPENCLAW_DEV_MODE for container', () => {
     const env = createMockEnv({
-      AI_GATEWAY_API_KEY: 'sk-gateway-key',
-      AI_GATEWAY_BASE_URL: 'https://gateway.ai.cloudflare.com/v1/123/my-gw/openai',
-      OPENAI_API_KEY: 'direct-openai-key',
+      DEV_MODE: 'true',
     });
     const result = buildEnvVars(env);
-    expect(result.OPENAI_API_KEY).toBe('sk-gateway-key');
-    expect(result.OPENAI_BASE_URL).toBe('https://gateway.ai.cloudflare.com/v1/123/my-gw/openai');
-    expect(result.MOONSHOT_API_KEY).toBeUndefined();
+    expect(result.OPENCLAW_DEV_MODE).toBe('true');
   });
 
-  it('passes AI_GATEWAY_BASE_URL directly', () => {
+  it('includes OPENCLAW_BIND_MODE when set', () => {
     const env = createMockEnv({
-      AI_GATEWAY_BASE_URL: 'https://gateway.ai.cloudflare.com/v1/123/my-gw/openai',
+      OPENCLAW_BIND_MODE: 'lan',
     });
     const result = buildEnvVars(env);
-    expect(result.AI_GATEWAY_BASE_URL).toBe('https://gateway.ai.cloudflare.com/v1/123/my-gw/openai');
-  });
-
-  it('AI_GATEWAY_* takes precedence over direct provider keys for Moonshot', () => {
-    const env = createMockEnv({
-      AI_GATEWAY_API_KEY: 'gateway-key',
-      AI_GATEWAY_BASE_URL: 'https://gateway.example.com/openai',
-      MOONSHOT_API_KEY: 'direct-key',
-      MOONSHOT_BASE_URL: 'https://api.moonshot.ai/v1',
-    });
-    const result = buildEnvVars(env);
-    expect(result.MOONSHOT_API_KEY).toBe('gateway-key');
-    expect(result.AI_GATEWAY_BASE_URL).toBe('https://gateway.example.com/openai');
-  });
-
-  it('AI_GATEWAY_* takes precedence over direct provider keys for OpenAI', () => {
-    const env = createMockEnv({
-      AI_GATEWAY_API_KEY: 'gateway-key',
-      AI_GATEWAY_BASE_URL: 'https://gateway.example.com/openai',
-      OPENAI_API_KEY: 'direct-key',
-    });
-    const result = buildEnvVars(env);
-    expect(result.OPENAI_API_KEY).toBe('gateway-key');
-    expect(result.AI_GATEWAY_BASE_URL).toBe('https://gateway.example.com/openai');
-    expect(result.OPENAI_BASE_URL).toBe('https://gateway.example.com/openai');
-  });
-
-  it('falls back to MOONSHOT_* when AI_GATEWAY_* not set', () => {
-    const env = createMockEnv({
-      MOONSHOT_API_KEY: 'direct-key',
-      MOONSHOT_BASE_URL: 'https://api.moonshot.ai/v1',
-    });
-    const result = buildEnvVars(env);
-    expect(result.MOONSHOT_API_KEY).toBe('direct-key');
-    expect(result.MOONSHOT_BASE_URL).toBe('https://api.moonshot.ai/v1');
-  });
-
-  it('includes OPENAI_API_KEY when set directly (no gateway)', () => {
-    const env = createMockEnv({ OPENAI_API_KEY: 'sk-openai-key' });
-    const result = buildEnvVars(env);
-    expect(result.OPENAI_API_KEY).toBe('sk-openai-key');
-  });
-
-  it('maps MOLTBOT_GATEWAY_TOKEN to CLAWDBOT_GATEWAY_TOKEN for container', () => {
-    const env = createMockEnv({ MOLTBOT_GATEWAY_TOKEN: 'my-token' });
-    const result = buildEnvVars(env);
-    expect(result.CLAWDBOT_GATEWAY_TOKEN).toBe('my-token');
+    expect(result.OPENCLAW_BIND_MODE).toBe('lan');
   });
 
   it('includes all channel tokens when set', () => {
@@ -111,28 +65,17 @@ describe('buildEnvVars', () => {
     expect(result.SLACK_APP_TOKEN).toBe('slack-app');
   });
 
-  it('maps DEV_MODE to CLAWDBOT_DEV_MODE for container', () => {
-    const env = createMockEnv({
-      DEV_MODE: 'true',
-      CLAWDBOT_BIND_MODE: 'lan',
-    });
-    const result = buildEnvVars(env);
-    
-    expect(result.CLAWDBOT_DEV_MODE).toBe('true');
-    expect(result.CLAWDBOT_BIND_MODE).toBe('lan');
-  });
-
   it('combines all env vars correctly', () => {
     const env = createMockEnv({
       MOONSHOT_API_KEY: 'sk-key',
-      MOLTBOT_GATEWAY_TOKEN: 'token',
+      OPENCLAW_GATEWAY_TOKEN: 'token',
       TELEGRAM_BOT_TOKEN: 'tg',
     });
     const result = buildEnvVars(env);
     
     expect(result).toEqual({
       MOONSHOT_API_KEY: 'sk-key',
-      CLAWDBOT_GATEWAY_TOKEN: 'token',
+      OPENCLAW_GATEWAY_TOKEN: 'token',
       TELEGRAM_BOT_TOKEN: 'tg',
     });
   });
