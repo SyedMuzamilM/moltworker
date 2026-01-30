@@ -21,6 +21,11 @@ export interface OpenClawEnv {
   SANDBOX_SLEEP_AFTER?: string; // How long before sandbox sleeps: 'never' (default), or duration like '10m', '1h'
   TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_DM_POLICY?: string;
+  // WhatsApp configuration (requires QR scan via `openclaw channels login`)
+  WHATSAPP_ENABLED?: string; // Set to 'true' to enable WhatsApp channel
+  WHATSAPP_DM_POLICY?: string; // 'pairing' (default) or 'allowlist'
+  WHATSAPP_ALLOW_FROM?: string; // Comma-separated phone numbers allowed to DM (e.g., '+918082008463')
+  WHATSAPP_SELF_CHAT_MODE?: string; // Set to 'true' if using personal WhatsApp number
   DISCORD_BOT_TOKEN?: string;
   DISCORD_DM_POLICY?: string;
   SLACK_BOT_TOKEN?: string;

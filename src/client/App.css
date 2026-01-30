@@ -1,46 +1,45 @@
-/* App layout styles */
+/* Gentleman's Blade - App Layout */
+
 .app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: var(--newsprint-beige);
+  position: relative;
 }
 
-.app-header {
-  background-color: var(--surface-color);
-  padding: 1rem 2rem;
-  border-bottom: 1px solid var(--border-color);
-  box-shadow: var(--shadow);
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.header-logo {
-  height: 36px;
-  width: auto;
-}
-
-.app-header h1 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.app-main {
-  flex: 1;
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+/* Top decorative color bars */
+.app::before,
+.app::after {
+  content: '';
+  height: 8px;
   width: 100%;
+  display: block;
+}
+
+.app::before {
+  background: linear-gradient(90deg, 
+    var(--barber-red) 0%, var(--barber-red) 33%,
+    var(--cream-white) 33%, var(--cream-white) 66%,
+    var(--barber-blue) 66%, var(--barber-blue) 100%
+  );
+  border-bottom: 3px solid var(--ink-black);
+}
+
+.app::after {
+  background: linear-gradient(90deg,
+    var(--barber-blue) 0%, var(--barber-blue) 33%,
+    var(--cream-white) 33%, var(--cream-white) 66%,
+    var(--barber-red) 66%, var(--barber-red) 100%
+  );
+  border-top: 3px solid var(--ink-black);
+  margin-top: auto;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .app-header {
-    padding: 1rem;
-  }
-
-  .app-main {
-    padding: 1rem;
+  .app::before,
+  .app::after {
+    height: 6px;
   }
 }

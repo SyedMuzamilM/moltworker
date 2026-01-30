@@ -1,19 +1,31 @@
-/* Global styles */
+/* Gentleman's Blade - Global Vintage Barbershop Theme */
+
+@import url('https://fonts.googleapis.com/css2?family=Rye&family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap');
+
 :root {
-  --bg-color: #1a1a2e;
-  --surface-color: #16213e;
-  --surface-hover: #1f3460;
-  --primary-color: #e94560;
-  --primary-hover: #ff6b6b;
-  --success-color: #4ade80;
-  --warning-color: #fbbf24;
-  --error-color: #ef4444;
-  --text-primary: #f8f9fa;
-  --text-secondary: #a0aec0;
-  --text-muted: #6b7280;
-  --border-color: #2d3748;
-  --border-radius: 8px;
-  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  /* Barber Pole Colors */
+  --barber-red: #C41E3A;
+  --barber-blue: #1E3A8A;
+  --cream-white: #F5F5DC;
+  --newsprint-beige: #E8E4D9;
+  --ink-black: #1A1A1A;
+  --parchment: #F4F1E8;
+  --gold: #D4AF37;
+  --copper: #B87333;
+  
+  /* Legacy compatibility */
+  --bg-color: var(--newsprint-beige);
+  --surface-color: var(--parchment);
+  --surface-hover: var(--cream-white);
+  --primary-color: var(--barber-red);
+  --primary-hover: #8B0000;
+  --success-color: #2E5D4E;
+  --warning-color: var(--copper);
+  --error-color: #8B0000;
+  --text-primary: var(--ink-black);
+  --text-secondary: #333;
+  --text-muted: #666;
+  --border-color: var(--ink-black);
 }
 
 * {
@@ -24,38 +36,112 @@
 
 html, body {
   height: 100%;
+  min-height: 100vh;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-primary);
+  font-family: 'Courier Prime', 'Courier New', monospace;
+  background-color: var(--newsprint-beige);
+  background-image: 
+    linear-gradient(90deg, transparent 50%, rgba(196, 30, 58, 0.03) 50%),
+    linear-gradient(90deg, transparent 50%, rgba(30, 58, 138, 0.03) 50%);
+  background-size: 100px 100px, 60px 60px;
+  color: var(--ink-black);
   line-height: 1.6;
+  position: relative;
+}
+
+/* Newsprint Noise Texture Overlay */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 9999;
 }
 
 #root {
   min-height: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Rye', 'Georgia', serif;
+  font-weight: 400;
+  letter-spacing: 2px;
+}
+
+/* Links */
 a {
-  color: var(--primary-color);
+  color: var(--barber-blue);
   text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s ease;
 }
 
 a:hover {
-  color: var(--primary-hover);
-  text-decoration: underline;
+  color: var(--barber-red);
+  border-bottom-color: var(--barber-red);
+  text-decoration: none;
 }
 
+/* Buttons - Global Reset */
 button {
   cursor: pointer;
-  font-family: inherit;
-  font-size: inherit;
+  font-family: 'Rye', 'Georgia', serif;
+  letter-spacing: 1px;
 }
 
-/* Utility classes */
+/* Form Elements */
+input, select, textarea {
+  font-family: 'Courier Prime', monospace;
+  background: var(--parchment);
+  border: 2px solid var(--ink-black);
+  padding: 0.5rem;
+  color: var(--ink-black);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--barber-red);
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--newsprint-beige);
+  border-left: 2px solid var(--ink-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--barber-red);
+  border: 2px solid var(--ink-black);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--barber-blue);
+}
+
+/* Selection */
+::selection {
+  background: var(--barber-red);
+  color: var(--cream-white);
+}
+
+/* Utility Classes */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -66,4 +152,47 @@ button {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* Color Block Utility */
+.color-block {
+  height: 20px;
+  width: 100%;
+}
+
+.color-block.red {
+  background: var(--barber-red);
+}
+
+.color-block.blue {
+  background: var(--barber-blue);
+}
+
+/* Ticket Style Utility */
+.ticket-style {
+  background: linear-gradient(135deg, var(--gold) 0%, #FFA500 100%);
+  border: 4px solid var(--ink-black);
+  position: relative;
+  box-shadow: 4px 4px 0 var(--ink-black);
+}
+
+.ticket-style::before,
+.ticket-style::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: var(--newsprint-beige);
+  border: 3px solid var(--ink-black);
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.ticket-style::before {
+  left: -10px;
+}
+
+.ticket-style::after {
+  right: -10px;
 }

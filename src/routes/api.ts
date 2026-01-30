@@ -172,6 +172,170 @@ adminApi.post('/devices/approve-all', async (c) => {
   }
 });
 
+// ============================================================
+// CHANNEL PAIRINGS (Telegram, Discord, etc.)
+// ============================================================
+
+// GET /api/admin/pairings/:channel - List pending/paired requests for a channel
+adminApi.get('/pairings/:channel', async (c) => {
+  const sandbox = c.get('sandbox');
+  const channel = c.req.param('channel');
+
+  console.log(`[API] Fetching pairings for channel: ${channel}`);
+
+  try {
+    // Ensure OpenClaw is running first
+    await ensureOpenClawGateway(sandbox, c.env);
+
+    // Run OpenClaw CLI to list pairings for the channel
+    console.log(`[API] Running: openclaw pairing list ${channel} --json --url ws://localhost:18789`);
+    const proc = await sandbox.startProcess(`openclaw pairing list ${channel} --json --url ws://localhost:18789`);
+    await waitForProcess(proc, CLI_TIMEOUT_MS);
+
+    const logs = await proc.getLogs();
+    const stdout = logs.stdout || '';
+    const stderr = logs.stderr || '';
+    
+    console.log(`[API] Pairings stdout:`, stdout.substring(0, 500));
+    if (stderr) console.log(`[API] Pairings stderr:`, stderr.substring(0, 500));
+
+    // Try to parse JSON output
+    try {
+      // Find JSON in output (may have other log lines)
+      const jsonMatch = stdout.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const data = JSON.parse(jsonMatch[0]);
+        console.log(`[API] Parsed ${data.pending?.length || 0} pending, ${data.paired?.length || 0} paired for ${channel}`);
+        return c.json(data);
+      }
+
+      // If no JSON found, return raw output for debugging
+      console.log(`[API] No JSON found in pairing output for ${channel}`);
+      return c.json({
+        pending: [],
+        paired: [],
+        raw: stdout,
+        stderr,
+      });
+    } catch {
+      return c.json({
+        pending: [],
+        paired: [],
+        raw: stdout,
+        stderr,
+        parseError: 'Failed to parse CLI output',
+      });
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return c.json({ error: errorMessage }, 500);
+  }
+});
+
+// POST /api/admin/pairings/:channel/:code/approve - Approve a pairing request
+adminApi.post('/pairings/:channel/:code/approve', async (c) => {
+  const sandbox = c.get('sandbox');
+  const channel = c.req.param('channel');
+  const code = c.req.param('code');
+
+  if (!channel || !code) {
+    return c.json({ error: 'channel and code are required' }, 400);
+  }
+
+  try {
+    // Ensure OpenClaw is running first
+    await ensureOpenClawGateway(sandbox, c.env);
+
+    // Run OpenClaw CLI to approve the pairing
+    const proc = await sandbox.startProcess(`openclaw pairing approve ${channel} ${code} --url ws://localhost:18789`);
+    await waitForProcess(proc, CLI_TIMEOUT_MS);
+
+    const logs = await proc.getLogs();
+    const stdout = logs.stdout || '';
+    const stderr = logs.stderr || '';
+
+    // Check for success indicators (case-insensitive)
+    const success = stdout.toLowerCase().includes('approved') || proc.exitCode === 0;
+
+    return c.json({
+      success,
+      channel,
+      code,
+      message: success ? 'Pairing approved' : 'Approval may have failed',
+      stdout,
+      stderr,
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return c.json({ error: errorMessage }, 500);
+  }
+});
+
+// POST /api/admin/pairings/:channel/approve-all - Approve all pending pairings for a channel
+adminApi.post('/pairings/:channel/approve-all', async (c) => {
+  const sandbox = c.get('sandbox');
+  const channel = c.req.param('channel');
+
+  try {
+    // Ensure OpenClaw is running first
+    await ensureOpenClawGateway(sandbox, c.env);
+
+    // First, get the list of pending pairings
+    const listProc = await sandbox.startProcess(`openclaw pairing list ${channel} --json --url ws://localhost:18789`);
+    await waitForProcess(listProc, CLI_TIMEOUT_MS);
+
+    const listLogs = await listProc.getLogs();
+    const stdout = listLogs.stdout || '';
+
+    // Parse pending pairings
+    let pending: Array<{ code: string; id?: string }> = [];
+    try {
+      const jsonMatch = stdout.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const data = JSON.parse(jsonMatch[0]);
+        pending = data.pending || [];
+      }
+    } catch {
+      return c.json({ error: 'Failed to parse pairing list', raw: stdout }, 500);
+    }
+
+    if (pending.length === 0) {
+      return c.json({ approved: [], message: `No pending ${channel} pairings to approve` });
+    }
+
+    // Approve each pending pairing
+    const results: Array<{ code: string; success: boolean; error?: string }> = [];
+
+    for (const pairing of pending) {
+      try {
+        const approveProc = await sandbox.startProcess(`openclaw pairing approve ${channel} ${pairing.code} --url ws://localhost:18789`);
+        await waitForProcess(approveProc, CLI_TIMEOUT_MS);
+
+        const approveLogs = await approveProc.getLogs();
+        const success = approveLogs.stdout?.toLowerCase().includes('approved') || approveProc.exitCode === 0;
+
+        results.push({ code: pairing.code, success });
+      } catch (err) {
+        results.push({
+          code: pairing.code,
+          success: false,
+          error: err instanceof Error ? err.message : 'Unknown error',
+        });
+      }
+    }
+
+    const approvedCount = results.filter(r => r.success).length;
+    return c.json({
+      approved: results.filter(r => r.success).map(r => r.code),
+      failed: results.filter(r => !r.success),
+      message: `Approved ${approvedCount} of ${pending.length} ${channel} pairing(s)`,
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return c.json({ error: errorMessage }, 500);
+  }
+});
+
 // GET /api/admin/storage - Get R2 storage status and last sync time
 adminApi.get('/storage', async (c) => {
   const sandbox = c.get('sandbox');

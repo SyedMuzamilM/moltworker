@@ -6,11 +6,17 @@ import {
   restartGateway,
   getStorageStatus,
   triggerSync,
+  listPairings,
+  approvePairing,
+  approveAllPairings,
   AuthError,
   type PendingDevice,
   type PairedDevice,
   type DeviceListResponse,
   type StorageStatusResponse,
+  type PendingPairing,
+  type PairedChannel,
+  type PairingListResponse,
 } from '../api'
 import './AdminPage.css'
 
@@ -18,6 +24,9 @@ import './AdminPage.css'
 function ButtonSpinner() {
   return <span className="btn-spinner" />
 }
+
+const CHANNELS = ['telegram', 'whatsapp', 'discord', 'slack'] as const;
+type ChannelType = typeof CHANNELS[number];
 
 export default function AdminPage() {
   const [pending, setPending] = useState<PendingDevice[]>([])
@@ -28,6 +37,15 @@ export default function AdminPage() {
   const [actionInProgress, setActionInProgress] = useState<string | null>(null)
   const [restartInProgress, setRestartInProgress] = useState(false)
   const [syncInProgress, setSyncInProgress] = useState(false)
+  
+  // Channel pairings state
+  const [channelPairings, setChannelPairings] = useState<Record<ChannelType, PairingListResponse | null>>({
+    telegram: null,
+    whatsapp: null,
+    discord: null,
+    slack: null,
+  })
+  const [pairingActionInProgress, setPairingActionInProgress] = useState<Record<string, boolean>>({})
 
   const fetchDevices = useCallback(async () => {
     try {
@@ -62,10 +80,31 @@ export default function AdminPage() {
     }
   }, [])
 
+  const fetchPairings = useCallback(async () => {
+    try {
+      const [telegramData, whatsappData, discordData, slackData] = await Promise.all([
+        listPairings('telegram'),
+        listPairings('whatsapp'),
+        listPairings('discord'),
+        listPairings('slack'),
+      ])
+      setChannelPairings({
+        telegram: telegramData,
+        whatsapp: whatsappData,
+        discord: discordData,
+        slack: slackData,
+      })
+    } catch (err) {
+      console.error('Failed to fetch pairings:', err)
+      // Don't set error state - pairings are secondary to devices
+    }
+  }, [])
+
   useEffect(() => {
     fetchDevices()
     fetchStorageStatus()
-  }, [fetchDevices, fetchStorageStatus])
+    fetchPairings()
+  }, [fetchDevices, fetchStorageStatus, fetchPairings])
 
   const handleApprove = async (requestId: string) => {
     setActionInProgress(requestId)
@@ -168,8 +207,55 @@ export default function AdminPage() {
     return `${days}d ago`
   }
 
+  const handleApprovePairing = async (channel: ChannelType, code: string) => {
+    const actionKey = `${channel}:${code}`
+    setPairingActionInProgress(prev => ({ ...prev, [actionKey]: true }))
+    try {
+      const result = await approvePairing(channel, code)
+      if (result.success) {
+        await fetchPairings()
+      } else {
+        setError(result.error || `Failed to approve ${channel} pairing`)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Failed to approve ${channel} pairing`)
+    } finally {
+      setPairingActionInProgress(prev => ({ ...prev, [actionKey]: false }))
+    }
+  }
+
+  const handleApproveAllPairings = async (channel: ChannelType) => {
+    const pairings = channelPairings[channel]
+    if (!pairings || pairings.pending.length === 0) return
+
+    const actionKey = `${channel}:all`
+    setPairingActionInProgress(prev => ({ ...prev, [actionKey]: true }))
+    try {
+      const result = await approveAllPairings(channel)
+      if (result.failed && result.failed.length > 0) {
+        setError(`Failed to approve ${result.failed.length} ${channel} pairing(s)`)
+      }
+      await fetchPairings()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Failed to approve ${channel} pairings`)
+    } finally {
+      setPairingActionInProgress(prev => ({ ...prev, [actionKey]: false }))
+    }
+  }
+
+  const hasAnyPairings = CHANNELS.some(channel => {
+    const data = channelPairings[channel]
+    return data && (data.pending.length > 0 || data.paired.length > 0)
+  })
+
   return (
     <div className="devices-page">
+      {/* Vintage Barbershop Header */}
+      <header className="admin-header">
+        <h1>OpenClaw Control Room</h1>
+        <p className="admin-subtitle">AI Gateway Management Console</p>
+      </header>
+
       {error && (
         <div className="error-banner">
           <span>{error}</span>
@@ -390,6 +476,133 @@ export default function AdminPage() {
           </div>
         )}
       </section>
+
+      {hasAnyPairings && (
+        <section className="devices-section channel-pairings-section">
+          <div className="section-header">
+            <h2>Channel Pairings</h2>
+            <button className="btn btn-secondary" onClick={fetchPairings}>
+              Refresh
+            </button>
+          </div>
+
+          {CHANNELS.map(channel => {
+            const data = channelPairings[channel]
+            if (!data) return null
+
+            const hasPending = data.pending.length > 0
+            const hasPaired = data.paired.length > 0
+
+            if (!hasPending && !hasPaired) return null
+
+            return (
+              <div key={channel} className="channel-section">
+                <h3 className="channel-title">
+                  {channel.charAt(0).toUpperCase() + channel.slice(1)}
+                </h3>
+
+                {hasPending && (
+                  <div className="channel-subsection">
+                    <div className="subsection-header">
+                      <h4>Pending ({data.pending.length})</h4>
+                      {data.pending.length > 0 && (
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => handleApproveAllPairings(channel)}
+                          disabled={pairingActionInProgress[`${channel}:all`]}
+                        >
+                          {pairingActionInProgress[`${channel}:all`] && <ButtonSpinner />}
+                          {pairingActionInProgress[`${channel}:all`] ? 'Approving...' : 'Approve All'}
+                        </button>
+                      )}
+                    </div>
+                    <div className="devices-grid">
+                      {data.pending.map((pairing) => (
+                        <div key={pairing.code} className="device-card pending">
+                          <div className="device-header">
+                            <span className="device-name">
+                              {pairing.displayName || pairing.id || pairing.code}
+                            </span>
+                            <span className="device-badge pending">Pending</span>
+                          </div>
+                          <div className="device-details">
+                            {pairing.id && (
+                              <div className="detail-row">
+                                <span className="label">ID:</span>
+                                <span className="value">{pairing.id}</span>
+                              </div>
+                            )}
+                            {pairing.code && (
+                              <div className="detail-row">
+                                <span className="label">Code:</span>
+                                <span className="value">{pairing.code}</span>
+                              </div>
+                            )}
+                            <div className="detail-row">
+                              <span className="label">Requested:</span>
+                              <span className="value" title={formatTimestamp(pairing.ts)}>
+                                {formatTimeAgo(pairing.ts)}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="device-actions">
+                            <button
+                              className="btn btn-success"
+                              onClick={() => handleApprovePairing(channel, pairing.code)}
+                              disabled={pairingActionInProgress[`${channel}:${pairing.code}`]}
+                            >
+                              {pairingActionInProgress[`${channel}:${pairing.code}`] && <ButtonSpinner />}
+                              {pairingActionInProgress[`${channel}:${pairing.code}`] ? 'Approving...' : 'Approve'}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {hasPaired && (
+                  <div className="channel-subsection">
+                    <h4 className="subsection-title">Paired ({data.paired.length})</h4>
+                    <div className="devices-grid">
+                      {data.paired.map((pairing, index) => (
+                        <div key={pairing.code || index} className="device-card paired">
+                          <div className="device-header">
+                            <span className="device-name">
+                              {pairing.displayName || pairing.id || pairing.code}
+                            </span>
+                            <span className="device-badge paired">Paired</span>
+                          </div>
+                          <div className="device-details">
+                            {pairing.id && (
+                              <div className="detail-row">
+                                <span className="label">ID:</span>
+                                <span className="value">{pairing.id}</span>
+                              </div>
+                            )}
+                            {pairing.code && (
+                              <div className="detail-row">
+                                <span className="label">Code:</span>
+                                <span className="value">{pairing.code}</span>
+                              </div>
+                            )}
+                            <div className="detail-row">
+                              <span className="label">Paired:</span>
+                              <span className="value" title={formatTimestamp(pairing.approvedAtMs)}>
+                                {formatTimeAgo(pairing.approvedAtMs)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </section>
+      )}
         </>
       )}
     </div>

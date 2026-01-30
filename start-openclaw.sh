@@ -180,11 +180,35 @@ if (process.env.OPENCLAW_DEV_MODE === 'true') {
 
 // Telegram configuration
 if (process.env.TELEGRAM_BOT_TOKEN) {
+    console.log('Configuring Telegram channel...');
     config.channels.telegram = config.channels.telegram || {};
     config.channels.telegram.botToken = process.env.TELEGRAM_BOT_TOKEN;
     config.channels.telegram.enabled = true;
     config.channels.telegram.dm = config.channels.telegram.dm || {};
     config.channels.telegram.dmPolicy = process.env.TELEGRAM_DM_POLICY || 'pairing';
+    console.log('Telegram configured with dmPolicy:', config.channels.telegram.dmPolicy);
+}
+
+// WhatsApp configuration (requires QR scan via "openclaw channels login")
+if (process.env.WHATSAPP_ENABLED === 'true') {
+    console.log('Configuring WhatsApp channel...');
+    console.log('NOTE: You must run "openclaw channels login" and scan QR code to activate WhatsApp');
+    config.channels.whatsapp = config.channels.whatsapp || {};
+    config.channels.whatsapp.enabled = true;
+    config.channels.whatsapp.dmPolicy = process.env.WHATSAPP_DM_POLICY || 'pairing';
+    
+    // Allow specific phone numbers (comma-separated) - Default to user's number
+    const allowedNumbers = process.env.WHATSAPP_ALLOW_FROM || '+918082008463';
+    config.channels.whatsapp.allowFrom = allowedNumbers.split(',').map(n => n.trim());
+    console.log('WhatsApp allowed numbers:', config.channels.whatsapp.allowFrom);
+    
+    // Enable self-chat mode if using personal WhatsApp number
+    if (process.env.WHATSAPP_SELF_CHAT_MODE === 'true') {
+        config.channels.whatsapp.selfChatMode = true;
+        console.log('WhatsApp self-chat mode enabled');
+    }
+    
+    console.log('WhatsApp configured with dmPolicy:', config.channels.whatsapp.dmPolicy);
 }
 
 // Discord configuration

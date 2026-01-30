@@ -140,3 +140,62 @@ export async function triggerSync(): Promise<SyncResponse> {
     method: 'POST',
   });
 }
+
+// Channel Pairings (Telegram, Discord, etc.)
+export interface PendingPairing {
+  code: string;
+  id?: string;
+  displayName?: string;
+  platform?: string;
+  ts: number;
+}
+
+export interface PairedChannel {
+  code: string;
+  id?: string;
+  displayName?: string;
+  platform?: string;
+  approvedAtMs: number;
+}
+
+export interface PairingListResponse {
+  pending: PendingPairing[];
+  paired: PairedChannel[];
+  raw?: string;
+  stderr?: string;
+  parseError?: string;
+  error?: string;
+}
+
+export interface ApprovePairingResponse {
+  success: boolean;
+  channel: string;
+  code: string;
+  message?: string;
+  stdout?: string;
+  stderr?: string;
+  error?: string;
+}
+
+export interface ApproveAllPairingsResponse {
+  approved: string[];
+  failed: Array<{ code: string; success: boolean; error?: string }>;
+  message?: string;
+  error?: string;
+}
+
+export async function listPairings(channel: string): Promise<PairingListResponse> {
+  return apiRequest<PairingListResponse>(`/pairings/${channel}`);
+}
+
+export async function approvePairing(channel: string, code: string): Promise<ApprovePairingResponse> {
+  return apiRequest<ApprovePairingResponse>(`/pairings/${channel}/${code}/approve`, {
+    method: 'POST',
+  });
+}
+
+export async function approveAllPairings(channel: string): Promise<ApproveAllPairingsResponse> {
+  return apiRequest<ApproveAllPairingsResponse>(`/pairings/${channel}/approve-all`, {
+    method: 'POST',
+  });
+}

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gentleman's Blade | Classic American Barbershop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rye&family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --barber-red: #C41E3A;
+            --barber-blue: #1E3A8A;
+            --cream-white: #F5F5DC;
+            --newsprint-beige: #E8E4D9;
+            --ink-black: #1A1A1A;
+            --parchment: #F4F1E8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier Prime', monospace;
+            background-color: var(--newsprint-beige);
+            color: var(--ink-black);
+            line-height: 1.6;
+            position: relative;
+        }
+
+        /* Newsprint Noise Texture */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(180deg, var(--barber-red) 0%, var(--barber-red) 33%, var(--cream-white) 33%, var(--cream-white) 66%, var(--barber-blue) 66%, var(--barber-blue) 100%);
+            border-bottom: 8px solid var(--ink-black);
+            position: relative;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            text-align: center;
+            background: var(--cream-white);
+            border-left: 8px solid var(--ink-black);
+            border-right: 8px solid var(--ink-black);
+            margin-top: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .header-content::before,
+        .header-content::after {
+            content: '✦';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            color: var(--barber-red);
+        }
+
+        .header-content::before {
+            left: 20px;
+        }
+
+        .header-content::after {
+            right: 20px;
+        }
+
+        h1 {
+            font-family: 'Rye', cursive;
+            font-size: 3.5rem;
+            color: var(--barber-red);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            text-shadow: 3px 3px 0 var(--ink-black);
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            font-family: 'Special Elite', cursive;
+            font-size: 1.2rem;
+            color: var(--barber-blue);
+            letter-spacing: 2px;
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--ink-black);
+            border-top: 4px solid var(--barber-red);
+            border-bottom: 4px solid var(--barber-blue);
+        }
+
+        nav ul {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            padding: 1rem;
+        }
+
+        nav li {
+            margin: 0 2rem;
+        }
+
+        nav a {
+            font-family: 'Rye', cursive;
+            color: var(--cream-white);
+            text-decoration: none;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border: 2px solid transparent;
+        }
+
+        nav a:hover {
+            color: var(--barber-red);
+            border-color: var(--barber-red);
+            background: var(--cream-white);
+        }
+
+        /* Main Content */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--parchment);
+            border: 6px solid var(--ink-black);
+            position: relative;
+            margin-bottom: 4rem;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -12px;
+            left: -12px;
+            right: -12px;
+            bottom: -12px;
+            border: 3px solid var(--barber-red);
+            pointer-events: none;
+        }
+
+        .hero h2 {
+            font-family: 'Rye', cursive;
+            font-size: 2.5rem;
+            color: var(--barber-blue);
+            margin-bottom: 1.5rem;
+            letter-spacing: 3px;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            line-height: 1.8;
+        }
+
+        /* Book Ticket Button */
+        .book-ticket {
+            display: inline-block;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: var(--ink-black);
+            font-family: 'Rye', cursive;
+            font-size: 1.3rem;
+            padding: 1rem 3rem;
+            text-decoration: none;
+            border: 4px solid var(--ink-black);
+            box-shadow: 
+                4px 4px 0 var(--ink-black),
+                inset 0 0 20px rgba(0,0,0,0.1);
+            transform: rotate(-2deg);
+            transition: all 0.3s ease;
+            position: relative;
+            letter-spacing: 2px;
+        }
+
+        .book-ticket::before,
+        .book-ticket::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: var(--parchment);
+            border: 3px solid var(--ink-black);
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .book-ticket::before {
+            left: -10px;
+        }
+
+        .book-ticket::after {
+            right: -10px;
+        }
+
+        .book-ticket:hover {
+            transform: rotate(0deg) scale(1.05);
+            box-shadow: 
+                6px 6px 0 var(--barber-red),
+                inset 0 0 30px rgba(0,0,0,0.2);
+        }
+
+        /* Section Styling */
+        section {
+            margin-bottom: 4rem;
+        }
+
+        h3 {
+            font-family: 'Rye', cursive;
+            font-size: 2rem;
+            color: var(--barber-red);
+            text-align: center;
+            margin-bottom: 2rem;
+            letter-spacing: 3px;
+            position: relative;
+            display: inline-block;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0 2rem;
+        }
+
+        h3::before,
+        h3::after {
+            content: '—';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--barber-blue);
+        }
+
+        h3::before {
+            left: 0;
+        }
+
+        h3::after {
+            right: 0;
+        }
+
+        /* Price List - Vintage Menu Style */
+        .price-list {
+            background: var(--parchment);
+            border: 4px solid var(--ink-black);
+            padding: 2rem;
+            position: relative;
+            box-shadow: 8px 8px 0 rgba(0,0,0,0.2);
+        }
+
+        .price-list::before {
+            content: 'EST. 1952';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--barber-red);
+            color: var(--cream-white);
+            font-family: 'Rye', cursive;
+            padding: 0.3rem 1rem;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+        }
+
+        .menu-header {
+            text-align: center;
+            border-bottom: 3px double var(--ink-black);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .menu-header h4 {
+            font-family: 'Rye', cursive;
+            font-size: 1.8rem;
+            color: var(--barber-blue);
+            letter-spacing: 4px;
+        }
+
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 1rem 0;
+            border-bottom: 1px dashed var(--ink-black);
+            position: relative;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item-name {
+            font-family: 'Special Elite', cursive;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .menu-item-dots {
+            flex-grow: 1;
+            border-bottom: 2px dotted var(--ink-black);
+            margin: 0 1rem;
+            position: relative;
+            top: -5px;
+        }
+
+        .menu-item-price {
+            font-family: 'Rye', cursive;
+            font-size: 1.2rem;
+            color: var(--barber-red);
+        }
+
+        .menu-description {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 0.3rem;
+        }
+
+        /* Barber Profiles */
+        .barbers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+            margin-top: 2rem;
+        }
+
+        .barber-card {
+            background: var(--cream-white);
+            border: 6px solid var(--ink-black);
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .barber-card::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 2px solid var(--barber-red);
+            pointer-events: none;
+        }
+
+        .barber-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 12px 12px 0 var(--barber-blue);
+        }
+
+        .barber-portrait {
+            width: 200px;
+            height: 200px;
+            border: 8px solid var(--ink-black);
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, #ccc 0%, #999 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            filter: grayscale(100%) contrast(1.2);
+        }
+
+        .barber-name {
+            font-family: 'Rye', cursive;
+            font-size: 1.5rem;
+            color: var(--barber-red);
+            margin-bottom: 0.5rem;
+            letter-spacing: 2px;
+        }
+
+        .barber-title {
+            font-family: 'Special Elite', cursive;
+            color: var(--barber-blue);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .barber-bio {
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--ink-black);
+            color: var(--cream-white);
+            padding: 3rem 2rem;
+            border-top: 8px solid var(--barber-red);
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer h4 {
+            font-family: 'Rye', cursive;
+            font-size: 1.5rem;
+            color: var(--barber-red);
+            margin-bottom: 1rem;
+        }
+
+        .footer-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .footer-section h5 {
+            font-family: 'Rye', cursive;
+            color: var(--barber-blue);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .footer-section p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* Geometric Color Blocks */
+        .color-block-red {
+            background: var(--barber-red);
+            height: 20px;
+            width: 100%;
+        }
+
+        .color-block-blue {
+            background: var(--barber-blue);
+            height: 20px;
+            width: 100%;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .barbers-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .menu-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .menu-item-dots {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="color-block-red"></div>
+    <div class="color-block-blue"></div>
+    
+    <header>
+        <div class="header-content">
+            <h1>Gentleman's Blade</h1>
+            <p class="tagline">Classic Cuts & Straight Razor Shaves Since 1952</p>
+        </div>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#barbers">Our Barbers</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section class="hero" id="home">
+            <h2>Where Tradition Meets Style</h2>
+            <p>Step back in time to an era when a haircut was an experience, not just a chore. Our master barbers combine old-world techniques with modern precision to deliver the perfect gentleman's grooming experience.</p>
+            <a href="#book" class="book-ticket">Book Appointment</a>
+        </section>
+
+        <section id="services">
+            <h3>Our Services</h3>
+            <div class="price-list">
+                <div class="menu-header">
+                    <h4>GENTLEMAN'S MENU</h4>
+                </div>
+                
+                <div class="menu-item">
+                    <div>
+                        <div class="menu-item-name">The Executive Cut</div>
+                        <div class="menu-description">Classic taper with precision scissor work</div>
+                    </div>
+                    <div class="menu-item-dots"></div>
+                    <div class="menu-item-price">$35</div>
+                </div>
+
+                <div class="menu-item">
+                    <div>
+                        <div class="menu-item-name">Straight Razor Shave</div>
+                        <div class="menu-description">Hot towel treatment & traditional straight razor</div>
+                    </div>
+                    <div class="menu-item-dots"></div>
+                    <div class="menu-item-price">$45</div>
+                </div>
+
+                <div class="menu-item">
+                    <div>
+                        <div class="menu-item-name">The Gentleman's Package</div>
+                        <div class="menu-description">Haircut, shave, beard trim & facial treatment</div>
+                    </div>
+                    <div class="menu-item-dots"></div>
+                    <div class="menu-item-price">$75</div>
+                </div>
+
+                <div class="menu-item">
+                    <div>
+                        <div class="menu-item-name">Beard Sculpting</div>
+                        <div class="menu-description">Precision trim & shape with hot towel finish</div>
+                    </div>
+                    <div class="menu-item-dots"></div>
+                    <div class="menu-item-price">$25</div>
+                </div>
+
+                <div class="menu-item">
+                    <div>
+                        <div class="menu-item-name">Neck Cleanup</div>
+                        <div class="menu-description">Quick trim to maintain your look between cuts</div>
+                    </div>
+                    <div class="menu-item-dots"></div>
+                    <div class="menu-item-price">$15</div>
+                </div>
+
+                <div class="menu-item">
+                    <div>
+                        <div class="menu-item-name">Father & Son</div>
+                        <div class="menu-description">Two haircuts, one timeless experience</div>
+                    </div>
+                    <div class="menu-item-dots"></div>
+                    <div class="menu-item-price">$55</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="barbers">
+            <h3>Master Barbers</h3>
+            <div class="barbers-grid">
+                <div class="barber-card">
+                    <div class="barber-portrait">👨‍🦳</div>
+                    <h4 class="barber-name">Vincenzo</h4>
+                    <p class="barber-title">Master Barber | 30 Years Experience</p>
+                    <p class="barber-bio">A third-generation barber from Sicily, Vincenzo specializes in classic Italian cuts and the perfect straight razor shave. His steady hand and attention to detail have made him a local legend.</p>
+                </div>
+
+                <div class="barber-card">
+                    <div class="barber-portrait">🧔</div>
+                    <h4 class="barber-name">Marcus</h4>
+                    <p class="barber-title">Style Specialist | Beard Expert</p>
+                    <p class="barber-bio">Marcus brings modern styling to traditional techniques. Known for his creative fade work and beard sculpting, he's the go-to barber for the contemporary gentleman.</p>
+                </div>
+
+                <div class="barber-card">
+                    <div class="barber-portrait">👴</div>
+                    <h4 class="barber-name">Harold</h4>
+                    <p class="barber-title">Senior Barber | Shop Founder</p>
+                    <p class="barber-bio">At 72, Harold has been cutting hair for 50 years. He opened Gentleman's Blade in 1974 and still takes appointments for his loyal customers who've been coming for decades.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer id="contact">
+        <div class="footer-content">
+            <h4>Gentleman's Blade</h4>
+            <p class="tagline">Crafting Confidence One Cut at a Time</p>
+            
+            <div class="footer-info">
+                <div class="footer-section">
+                    <h5>Location</h5>
+                    <p>42 Main Street<br>Downtown District<br>New York, NY 10001</p>
+                </div>
+                <div class="footer-section">
+                    <h5>Hours</h5>
+                    <p>Monday - Friday: 8am - 7pm<br>Saturday: 9am - 6pm<br>Sunday: Closed</p>
+                </div>
+                <div class="footer-section">
+                    <h5>Contact</h5>
+                    <p>(555) 123-BARB<br>book@gentlemansblade.com</p>
+                </div>
+            </div>
+            
+            <p style="margin-top: 2rem; font-size: 0.8rem; opacity: 0.8;">© 2024 Gentleman's Blade Barbershop. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div class="color-block-blue"></div>
+    <div class="color-block-red"></div>
+</body>
+</html>

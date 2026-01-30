@@ -86,7 +86,9 @@
 	// - KIMICODE_API_KEY: Your Kimi Code API key for coding-optimized AI (get from https://kimi.com/)
 	// - CF_ACCESS_TEAM_DOMAIN: Cloudflare Access team domain
 	// - CF_ACCESS_AUD: Cloudflare Access application audience
-	// - TELEGRAM_BOT_TOKEN: (optional) Telegram bot token
+	// - TELEGRAM_BOT_TOKEN: (optional) Telegram bot token (get from @BotFather)
+	// - WHATSAPP_ENABLED: (optional) Set to 'true' to enable WhatsApp (requires QR scan via "openclaw channels login")
+	// - WHATSAPP_ALLOW_FROM: (optional) Comma-separated phone numbers allowed to DM (e.g., "+918082008463")
 	// - DISCORD_BOT_TOKEN: (optional) Discord bot token
 	// - SLACK_BOT_TOKEN: (optional) Slack bot token
 	// - SLACK_APP_TOKEN: (optional) Slack app token
