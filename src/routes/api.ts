@@ -213,6 +213,7 @@ adminApi.get('/pairings/:channel', async (c) => {
         return c.json({
           pending,
           paired,
+          channel: cliData.channel || channel,
           raw: stdout,
         });
       }
@@ -222,6 +223,7 @@ adminApi.get('/pairings/:channel', async (c) => {
       return c.json({
         pending: [],
         paired: [],
+        channel,
         raw: stdout,
         stderr,
       });
@@ -229,6 +231,7 @@ adminApi.get('/pairings/:channel', async (c) => {
       return c.json({
         pending: [],
         paired: [],
+        channel,
         raw: stdout,
         stderr,
         parseError: 'Failed to parse CLI output',
