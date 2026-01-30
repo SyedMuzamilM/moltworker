@@ -205,9 +205,21 @@ adminApi.get('/pairings/:channel', async (c) => {
       // Find JSON in output (may have other log lines)
       const jsonMatch = stdout.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        const data = JSON.parse(jsonMatch[0]);
-        console.log(`[API] Parsed ${data.pending?.length || 0} pending, ${data.paired?.length || 0} paired for ${channel}`);
-        return c.json(data);
+        const cliData = JSON.parse(jsonMatch[0]);
+        console.log(`[API] CLI returned for ${channel}:`, cliData);
+        
+        // Transform CLI response format to frontend expected format
+        // CLI returns: { channel: "telegram", requests: [...] }
+        // Frontend expects: { pending: [...], paired: [...] }
+        const transformedData = {
+          pending: cliData.requests || cliData.pending || [],
+          paired: cliData.paired || [],
+          channel: cliData.channel || channel,
+          raw: stdout,
+        };
+        
+        console.log(`[API] Transformed ${transformedData.pending.length} pending for ${channel}`);
+        return c.json(transformedData);
       }
 
       // If no JSON found, return raw output for debugging
@@ -215,6 +227,7 @@ adminApi.get('/pairings/:channel', async (c) => {
       return c.json({
         pending: [],
         paired: [],
+        channel,
         raw: stdout,
         stderr,
       });
@@ -222,6 +235,7 @@ adminApi.get('/pairings/:channel', async (c) => {
       return c.json({
         pending: [],
         paired: [],
+        channel,
         raw: stdout,
         stderr,
         parseError: 'Failed to parse CLI output',
