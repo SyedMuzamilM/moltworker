@@ -188,8 +188,9 @@ adminApi.get('/pairings/:channel', async (c) => {
     await ensureOpenClawGateway(sandbox, c.env);
 
     // Run OpenClaw CLI to list pairings for the channel
-    console.log(`[API] Running: openclaw pairing list ${channel} --json --url ws://localhost:18789`);
-    const proc = await sandbox.startProcess(`openclaw pairing list ${channel} --json --url ws://localhost:18789`);
+    // Note: pairing commands don't support --url flag, they use the running gateway
+    console.log(`[API] Running: openclaw pairing list ${channel} --json`);
+    const proc = await sandbox.startProcess(`openclaw pairing list ${channel} --json`);
     await waitForProcess(proc, CLI_TIMEOUT_MS);
 
     const logs = await proc.getLogs();
@@ -247,7 +248,8 @@ adminApi.post('/pairings/:channel/:code/approve', async (c) => {
     await ensureOpenClawGateway(sandbox, c.env);
 
     // Run OpenClaw CLI to approve the pairing
-    const proc = await sandbox.startProcess(`openclaw pairing approve ${channel} ${code} --url ws://localhost:18789`);
+    // Note: pairing commands don't support --url flag, they use the running gateway
+    const proc = await sandbox.startProcess(`openclaw pairing approve ${channel} ${code}`);
     await waitForProcess(proc, CLI_TIMEOUT_MS);
 
     const logs = await proc.getLogs();
@@ -308,7 +310,8 @@ adminApi.post('/pairings/:channel/approve-all', async (c) => {
 
     for (const pairing of pending) {
       try {
-        const approveProc = await sandbox.startProcess(`openclaw pairing approve ${channel} ${pairing.code} --url ws://localhost:18789`);
+        // Note: pairing commands don't support --url flag
+        const approveProc = await sandbox.startProcess(`openclaw pairing approve ${channel} ${pairing.code}`);
         await waitForProcess(approveProc, CLI_TIMEOUT_MS);
 
         const approveLogs = await approveProc.getLogs();
