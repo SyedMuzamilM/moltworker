@@ -40,8 +40,8 @@
   "license": "MIT",
   "cloudflare": {
     "bindings": {
-      "ANTHROPIC_API_KEY": {
-        "description": "Your [Anthropic API key](https://console.anthropic.com/)."
+      "MOONSHOT_API_KEY": {
+        "description": "Your [Moonshot API key](https://platform.moonshot.ai/)."
       },
       "MOLTBOT_GATEWAY_TOKEN": {
         "description": "Token for gateway access. Generate with: openssl rand -hex 32"

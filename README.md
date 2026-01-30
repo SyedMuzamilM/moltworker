@@ -11,7 +11,7 @@ Run [Moltbot](https://molt.bot/) personal AI assistant in a [Cloudflare Sandbox]
 ## Requirements
 
 - [Workers Paid plan](https://www.cloudflare.com/plans/developer-platform/) ($5 USD/month) — required for Cloudflare Sandbox containers
-- [Anthropic API key](https://console.anthropic.com/) — for Claude access, or you can use AI Gateway's [Unified Billing](https://developers.cloudflare.com/ai-gateway/features/unified-billing/)
+- [Moonshot API key](https://platform.moonshot.ai/) — for Kimi K2.5 access, or you can use AI Gateway's [Unified Billing](https://developers.cloudflare.com/ai-gateway/features/unified-billing/)
 
 The following Cloudflare features used by this project have free tiers:
 - Cloudflare Access (authentication)
@@ -43,8 +43,12 @@ _Cloudflare Sandboxes are available on the [Workers Paid plan](https://dash.clou
 # Install dependencies
 npm install
 
-# Set your API key (direct Anthropic access)
-npx wrangler secret put ANTHROPIC_API_KEY
+# Set your API key (direct Moonshot access)
+npx wrangler secret put MOONSHOT_API_KEY
+
+# Optional: override the Moonshot base URL (default https://api.moonshot.ai/v1)
+# npx wrangler secret put MOONSHOT_BASE_URL
+# Enter: https://api.moonshot.cn/v1
 
 # Or use AI Gateway instead (see "Optional: Cloudflare AI Gateway" below)
 # npx wrangler secret put AI_GATEWAY_API_KEY
@@ -333,18 +337,18 @@ You can route API requests through [Cloudflare AI Gateway](https://developers.cl
 ### Setup
 
 1. Create an AI Gateway in the [AI Gateway section](https://dash.cloudflare.com/?to=/:account/ai/ai-gateway/create-gateway) of the Cloudflare Dashboard.
-2. Add a provider (e.g., Anthropic) to your gateway
+2. Add a provider (e.g., OpenAI-compatible for Moonshot) to your gateway
 3. Set the gateway secrets:
 
-You'll find the base URL on the Overview tab of your newly created gateway. At the bottom of the page, expand the **Native API/SDK Examples** section and select "Anthropic".
+You'll find the base URL on the Overview tab of your newly created gateway. At the bottom of the page, expand the **Native API/SDK Examples** section and select "OpenAI".
 
 ```bash
-# Your provider's API key (e.g., Anthropic API key)
+# Your provider's API key (e.g., Moonshot API key)
 npx wrangler secret put AI_GATEWAY_API_KEY
 
 # Your AI Gateway endpoint URL
 npx wrangler secret put AI_GATEWAY_BASE_URL
-# Enter: https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/anthropic
+# Enter: https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/openai
 ```
 
 4. Redeploy:
@@ -353,7 +357,7 @@ npx wrangler secret put AI_GATEWAY_BASE_URL
 npm run deploy
 ```
 
-The `AI_GATEWAY_*` variables take precedence over `ANTHROPIC_*` if both are set.
+The `AI_GATEWAY_*` variables take precedence over `MOONSHOT_*` if both are set.
 
 ## All Secrets Reference
 
@@ -361,8 +365,8 @@ The `AI_GATEWAY_*` variables take precedence over `ANTHROPIC_*` if both are set.
 |--------|----------|-------------|
 | `AI_GATEWAY_API_KEY` | Yes* | API key for your AI Gateway provider (requires `AI_GATEWAY_BASE_URL`) |
 | `AI_GATEWAY_BASE_URL` | Yes* | AI Gateway endpoint URL (required when using `AI_GATEWAY_API_KEY`) |
-| `ANTHROPIC_API_KEY` | Yes* | Direct Anthropic API key (fallback if AI Gateway not configured) |
-| `ANTHROPIC_BASE_URL` | No | Direct Anthropic API base URL (fallback) |
+| `MOONSHOT_API_KEY` | Yes* | Direct Moonshot API key (fallback if AI Gateway not configured) |
+| `MOONSHOT_BASE_URL` | No | Direct Moonshot API base URL (fallback) |
 | `OPENAI_API_KEY` | No | OpenAI API key (alternative provider) |
 | `CF_ACCESS_TEAM_DOMAIN` | Yes* | Cloudflare Access team domain (required for admin UI) |
 | `CF_ACCESS_AUD` | Yes* | Cloudflare Access application audience (required for admin UI) |
