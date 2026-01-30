@@ -477,25 +477,43 @@ export default function AdminPage() {
         )}
       </section>
 
-      {hasAnyPairings && (
-        <section className="devices-section channel-pairings-section">
-          <div className="section-header">
-            <h2>Channel Pairings</h2>
-            <button className="btn btn-secondary" onClick={fetchPairings}>
-              Refresh
-            </button>
+      <section className="devices-section channel-pairings-section">
+        <div className="section-header">
+          <h2>Channel Pairings</h2>
+          <button className="btn btn-secondary" onClick={fetchPairings}>
+            Refresh
+          </button>
+        </div>
+
+        {!hasAnyPairings && (
+          <div className="empty-state">
+            <p>No channel pairings yet</p>
+            <p className="hint">
+              To see pairings here, you need to:
+              <br /><br />
+              <strong>For Telegram:</strong><br />
+              1. Message your bot on Telegram with /start<br />
+              2. The bot will reply with a pairing code<br />
+              3. Return here to approve the pairing<br />
+              <br />
+              <strong>For WhatsApp:</strong><br />
+              1. Run "openclaw channels login" and scan QR code<br />
+              2. Message your WhatsApp number<br />
+              3. Return here to approve the pairing
+            </p>
           </div>
+        )}
 
-          {CHANNELS.map(channel => {
-            const data = channelPairings[channel]
-            if (!data) return null
+        {CHANNELS.map(channel => {
+          const data = channelPairings[channel]
+          if (!data) return null
 
-            const hasPending = data.pending.length > 0
-            const hasPaired = data.paired.length > 0
+          const hasPending = data.pending.length > 0
+          const hasPaired = data.paired.length > 0
 
-            if (!hasPending && !hasPaired) return null
+          if (!hasPending && !hasPaired) return null
 
-            return (
+          return (
               <div key={channel} className="channel-section">
                 <h3 className="channel-title">
                   {channel.charAt(0).toUpperCase() + channel.slice(1)}
@@ -602,7 +620,6 @@ export default function AdminPage() {
             )
           })}
         </section>
-      )}
         </>
       )}
     </div>
