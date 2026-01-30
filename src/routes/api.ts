@@ -188,9 +188,8 @@ adminApi.get('/pairings/:channel', async (c) => {
     await ensureOpenClawGateway(sandbox, c.env);
 
     // Run OpenClaw CLI to list pairings for the channel
-    // Note: pairing commands don't support --url flag, they use the running gateway
-    console.log(`[API] Running: openclaw pairing list ${channel} --json`);
-    const proc = await sandbox.startProcess(`openclaw pairing list ${channel} --json`);
+    console.log(`[API] Running: openclaw pairing list ${channel} --json --url ws://localhost:18789`);
+    const proc = await sandbox.startProcess(`openclaw pairing list ${channel} --json --url ws://localhost:18789`);
     await waitForProcess(proc, CLI_TIMEOUT_MS);
 
     const logs = await proc.getLogs();
@@ -206,20 +205,15 @@ adminApi.get('/pairings/:channel', async (c) => {
       const jsonMatch = stdout.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const cliData = JSON.parse(jsonMatch[0]);
-        console.log(`[API] CLI returned for ${channel}:`, cliData);
-        
-        // Transform CLI response format to frontend expected format
-        // CLI returns: { channel: "telegram", requests: [...] }
-        // Frontend expects: { pending: [...], paired: [...] }
-        const transformedData = {
-          pending: cliData.requests || cliData.pending || [],
-          paired: cliData.paired || [],
-          channel: cliData.channel || channel,
+        const pending = cliData.pending || cliData.requests || [];
+        const paired = cliData.paired || [];
+
+        console.log(`[API] Parsed ${pending.length} pending, ${paired.length} paired for ${channel}`);
+        return c.json({
+          pending,
+          paired,
           raw: stdout,
-        };
-        
-        console.log(`[API] Transformed ${transformedData.pending.length} pending for ${channel}`);
-        return c.json(transformedData);
+        });
       }
 
       // If no JSON found, return raw output for debugging
@@ -227,7 +221,6 @@ adminApi.get('/pairings/:channel', async (c) => {
       return c.json({
         pending: [],
         paired: [],
-        channel,
         raw: stdout,
         stderr,
       });
@@ -235,7 +228,6 @@ adminApi.get('/pairings/:channel', async (c) => {
       return c.json({
         pending: [],
         paired: [],
-        channel,
         raw: stdout,
         stderr,
         parseError: 'Failed to parse CLI output',
@@ -262,8 +254,7 @@ adminApi.post('/pairings/:channel/:code/approve', async (c) => {
     await ensureOpenClawGateway(sandbox, c.env);
 
     // Run OpenClaw CLI to approve the pairing
-    // Note: pairing commands don't support --url flag, they use the running gateway
-    const proc = await sandbox.startProcess(`openclaw pairing approve ${channel} ${code}`);
+    const proc = await sandbox.startProcess(`openclaw pairing approve ${channel} ${code} --url ws://localhost:18789`);
     await waitForProcess(proc, CLI_TIMEOUT_MS);
 
     const logs = await proc.getLogs();
@@ -324,8 +315,7 @@ adminApi.post('/pairings/:channel/approve-all', async (c) => {
 
     for (const pairing of pending) {
       try {
-        // Note: pairing commands don't support --url flag
-        const approveProc = await sandbox.startProcess(`openclaw pairing approve ${channel} ${pairing.code}`);
+        const approveProc = await sandbox.startProcess(`openclaw pairing approve ${channel} ${pairing.code} --url ws://localhost:18789`);
         await waitForProcess(approveProc, CLI_TIMEOUT_MS);
 
         const approveLogs = await approveProc.getLogs();
