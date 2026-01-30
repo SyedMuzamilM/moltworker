@@ -161,6 +161,38 @@ config.channels = config.channels || {};
 config.models = config.models || {};
 config.models.mode = 'merge';
 
+// ============================================================
+// CLEAN UP INVALID/LEGACY CONFIG KEYS
+// ============================================================
+// Remove keys that are no longer valid in newer OpenClaw versions
+// to prevent config validation errors
+
+if (config.channels) {
+    // Remove invalid WhatsApp keys
+    if (config.channels.whatsapp) {
+        if ('enabled' in config.channels.whatsapp) {
+            console.log('Removing invalid key: channels.whatsapp.enabled');
+            delete config.channels.whatsapp.enabled;
+        }
+    }
+    
+    // Remove invalid Telegram keys
+    if (config.channels.telegram) {
+        if ('dm' in config.channels.telegram) {
+            console.log('Removing invalid key: channels.telegram.dm');
+            delete config.channels.telegram.dm;
+        }
+    }
+    
+    // Remove invalid Discord keys
+    if (config.channels.discord) {
+        if ('dm' in config.channels.discord) {
+            console.log('Removing invalid key: channels.discord.dm');
+            delete config.channels.discord.dm;
+        }
+    }
+}
+
 // Gateway configuration
 config.gateway.port = 18789;
 config.gateway.mode = 'local';
@@ -183,8 +215,6 @@ if (process.env.TELEGRAM_BOT_TOKEN) {
     console.log('Configuring Telegram channel...');
     config.channels.telegram = config.channels.telegram || {};
     config.channels.telegram.botToken = process.env.TELEGRAM_BOT_TOKEN;
-    config.channels.telegram.enabled = true;
-    config.channels.telegram.dm = config.channels.telegram.dm || {};
     config.channels.telegram.dmPolicy = process.env.TELEGRAM_DM_POLICY || 'pairing';
     console.log('Telegram configured with dmPolicy:', config.channels.telegram.dmPolicy);
 }
@@ -194,7 +224,7 @@ if (process.env.WHATSAPP_ENABLED === 'true') {
     console.log('Configuring WhatsApp channel...');
     console.log('NOTE: You must run "openclaw channels login" and scan QR code to activate WhatsApp');
     config.channels.whatsapp = config.channels.whatsapp || {};
-    config.channels.whatsapp.enabled = true;
+    // Note: WhatsApp doesn't use 'enabled' flag - it auto-enables when configured
     config.channels.whatsapp.dmPolicy = process.env.WHATSAPP_DM_POLICY || 'pairing';
     
     // Allow specific phone numbers (comma-separated) - Default to user's number
@@ -213,19 +243,20 @@ if (process.env.WHATSAPP_ENABLED === 'true') {
 
 // Discord configuration
 if (process.env.DISCORD_BOT_TOKEN) {
+    console.log('Configuring Discord channel...');
     config.channels.discord = config.channels.discord || {};
     config.channels.discord.token = process.env.DISCORD_BOT_TOKEN;
-    config.channels.discord.enabled = true;
-    config.channels.discord.dm = config.channels.discord.dm || {};
-    config.channels.discord.dm.policy = process.env.DISCORD_DM_POLICY || 'pairing';
+    config.channels.discord.dmPolicy = process.env.DISCORD_DM_POLICY || 'pairing';
+    console.log('Discord configured with dmPolicy:', config.channels.discord.dmPolicy);
 }
 
 // Slack configuration
 if (process.env.SLACK_BOT_TOKEN && process.env.SLACK_APP_TOKEN) {
+    console.log('Configuring Slack channel...');
     config.channels.slack = config.channels.slack || {};
     config.channels.slack.botToken = process.env.SLACK_BOT_TOKEN;
     config.channels.slack.appToken = process.env.SLACK_APP_TOKEN;
-    config.channels.slack.enabled = true;
+    console.log('Slack configured');
 }
 
 // ============================================================
