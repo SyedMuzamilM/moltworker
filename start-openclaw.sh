@@ -193,6 +193,14 @@ if (config.channels) {
     }
 }
 
+// Remove invalid tools config keys (recent OpenClaw versions)
+if (config.tools && config.tools.web && config.tools.web.fetch) {
+    if ('firecrawl' in config.tools.web.fetch) {
+        console.log('Removing invalid key: tools.web.fetch.firecrawl');
+        delete config.tools.web.fetch.firecrawl;
+    }
+}
+
 // Gateway configuration
 config.gateway.port = 18789;
 config.gateway.mode = 'local';
