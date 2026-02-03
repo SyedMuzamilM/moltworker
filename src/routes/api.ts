@@ -293,7 +293,8 @@ adminApi.post('/pairings/:channel/approve-all', async (c) => {
     await ensureOpenClawGateway(sandbox, c.env);
 
     // First, get the list of pending pairings
-    const listProc = await sandbox.startProcess(`openclaw pairing list ${channel} --json --url ws://localhost:18789`);
+    // Note: pairing commands don't support --url flag, they use the running gateway
+    const listProc = await sandbox.startProcess(`openclaw pairing list ${channel} --json`);
     await waitForProcess(listProc, CLI_TIMEOUT_MS);
 
     const listLogs = await listProc.getLogs();
