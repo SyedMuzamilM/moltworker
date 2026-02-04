@@ -385,6 +385,62 @@ The `AI_GATEWAY_*` variables take precedence over `MOONSHOT_*` if both are set.
 | `SLACK_APP_TOKEN` | No | Slack app token |
 | `CDP_SECRET` | No | Shared secret for CDP endpoint authentication (see [Browser Automation](#optional-browser-automation-cdp)) |
 | `WORKER_URL` | No | Public URL of the worker (required for CDP) |
+| `CONVEX_URL` | No | Convex deployment URL for Mission Control notifications |
+
+## Optional: Mission Control Integration
+
+This worker includes built-in support for [Mission Control](https://github.com/mzmldev/mission-control) - a multi-agent task management system.
+
+### What it does
+
+When `CONVEX_URL` is configured, a notification daemon automatically starts alongside the OpenClaw gateway:
+
+- **Polls Convex every 2 seconds** for undelivered notifications
+- **Sends notifications to agents** via `openclaw sessions send`
+- **Supports @mentions** - When you @Vision in a task comment, Vision gets notified
+- **Thread subscriptions** - Agents auto-subscribe to tasks they interact with
+
+### Setup
+
+1. Deploy Mission Control (separate repository)
+2. Get your Convex deployment URL from the Mission Control dashboard
+3. Set the secret:
+
+```bash
+npx wrangler secret put CONVEX_URL
+# Enter: https://your-deployment.convex.cloud
+```
+
+4. Redeploy:
+
+```bash
+npm run deploy
+```
+
+The notification daemon will start automatically on container startup.
+
+### How it works
+
+```
+User posts comment with @Vision in Mission Control
+         ↓
+Notification created in Convex (undelivered)
+         ↓
+Daemon polls Convex every 2s (inside Cloudflare Sandbox)
+         ↓
+Finds notification for Vision
+         ↓
+Sends: openclaw sessions send --session "agent:seo-analyst:main"
+         ↓
+Vision receives message in their session
+```
+
+### Viewing daemon logs
+
+```bash
+# SSH into the container via admin UI
+cat /var/log/mc-notifications.log
+```
 
 ## Security Considerations
 

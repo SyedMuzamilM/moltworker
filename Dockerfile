@@ -40,6 +40,10 @@ COPY docs/agents/ /root/.openclaw-templates/agents/
 # Copy custom skills
 COPY skills/ /root/openclaw/skills/
 
+# Copy Mission Control notification daemon
+COPY daemon/ /root/openclaw/daemon/
+RUN chmod +x /root/openclaw/daemon/notifications.js
+
 # Set working directory
 WORKDIR /root/openclaw
 
