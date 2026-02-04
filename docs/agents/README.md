@@ -10,5 +10,13 @@ Required files per agent:
 - TOOLS.md
 - HEARTBEAT.md
 
-Copy these files into the agent workspace directory used by the gateway.
+Shared memory files (single shared workspace):
+- memory/WORKING.md
+- memory/MEMORY.md
+- memory/HEARTBEAT.md
+- memory/YYYY-MM-DD.md
+
+Copy these files into the shared workspace directory used by all agents.
 Use the prompting guide in docs/PROMPTING_GUIDE.md when crafting tasks.
+
+Note: Jarvis uses agent id `main` to match the session key `agent:main:main`.

@@ -1,8 +1,20 @@
 {
   "agents": {
     "defaults": {
-      "workspace": "/root/openclaw"
-    }
+      "workspace": "/root/openclaw/shared"
+    },
+    "list": [
+      { "id": "main", "workspace": "/root/openclaw/workspaces/main" },
+      { "id": "product-analyst", "workspace": "/root/openclaw/workspaces/product-analyst" },
+      { "id": "customer-researcher", "workspace": "/root/openclaw/workspaces/customer-researcher" },
+      { "id": "seo-analyst", "workspace": "/root/openclaw/workspaces/seo-analyst" },
+      { "id": "content-writer", "workspace": "/root/openclaw/workspaces/content-writer" },
+      { "id": "social-media-manager", "workspace": "/root/openclaw/workspaces/social-media-manager" },
+      { "id": "designer", "workspace": "/root/openclaw/workspaces/designer" },
+      { "id": "email-marketing", "workspace": "/root/openclaw/workspaces/email-marketing" },
+      { "id": "developer", "workspace": "/root/openclaw/workspaces/developer" },
+      { "id": "notion-agent", "workspace": "/root/openclaw/workspaces/notion-agent" }
+    ]
   },
   "gateway": {
     "port": 18789,

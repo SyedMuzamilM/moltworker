@@ -27,12 +27,15 @@ RUN mkdir -p /root/.openclaw \
     && mkdir -p /root/openclaw/skills
 
 # Copy startup script
-# Build cache bust: 2026-02-01-openclaw-v2
+# Build cache bust: 2026-02-04-openclaw-v3
 COPY start-openclaw.sh /usr/local/bin/start-openclaw.sh
 RUN chmod +x /usr/local/bin/start-openclaw.sh
 
 # Copy default configuration template
 COPY openclaw.json.template /root/.openclaw-templates/openclaw.json.template
+
+# Copy agent persona templates
+COPY docs/agents/ /root/.openclaw-templates/agents/
 
 # Copy custom skills
 COPY skills/ /root/openclaw/skills/

@@ -35,6 +35,94 @@ echo "Backup directory: $BACKUP_DIR"
 mkdir -p "$CONFIG_DIR"
 
 # ============================================================
+# SET UP AGENT WORKSPACES (SHARED MEMORY)
+# ============================================================
+SHARED_WORKSPACE="/root/openclaw/shared"
+SHARED_MEMORY="$SHARED_WORKSPACE/memory"
+AGENTS_DIR="/root/openclaw/workspaces"
+AGENT_TEMPLATES_DIR="$TEMPLATE_DIR/agents"
+
+mkdir -p "$SHARED_MEMORY"
+mkdir -p "$AGENTS_DIR"
+
+if [ ! -f "$SHARED_MEMORY/WORKING.md" ]; then
+  cat > "$SHARED_MEMORY/WORKING.md" << 'EOF'
+# WORKING.md
+
+## Current Task
+
+## Status
+
+## Next Steps
+1.
+2.
+3.
+
+## Blockers
+- None
+EOF
+fi
+
+if [ ! -f "$SHARED_MEMORY/MEMORY.md" ]; then
+  cat > "$SHARED_MEMORY/MEMORY.md" << 'EOF'
+# MEMORY.md
+
+## Stable Facts
+
+## Decisions
+
+## Preferences
+EOF
+fi
+
+if [ ! -f "$SHARED_MEMORY/HEARTBEAT.md" ]; then
+  cat > "$SHARED_MEMORY/HEARTBEAT.md" << 'EOF'
+# HEARTBEAT.md
+
+## On Wake
+- [ ] Read memory/WORKING.md
+- [ ] Check Mission Control for mentions
+- [ ] Check assigned tasks
+- [ ] Scan activity feed for relevant items
+
+## If Idle
+- [ ] Post HEARTBEAT_OK
+- [ ] Log to memory/YYYY-MM-DD.md
+EOF
+fi
+
+AGENT_IDS=(
+  "main"
+  "product-analyst"
+  "customer-researcher"
+  "seo-analyst"
+  "content-writer"
+  "social-media-manager"
+  "designer"
+  "email-marketing"
+  "developer"
+  "notion-agent"
+)
+
+for AGENT_ID in "${AGENT_IDS[@]}"; do
+  AGENT_WORKSPACE="$AGENTS_DIR/$AGENT_ID"
+  mkdir -p "$AGENT_WORKSPACE"
+
+  if [ ! -e "$AGENT_WORKSPACE/memory" ]; then
+    ln -s "$SHARED_MEMORY" "$AGENT_WORKSPACE/memory"
+  fi
+
+  # Seed persona files if missing
+  if [ -d "$AGENT_TEMPLATES_DIR/$AGENT_ID" ]; then
+    for FILE in SOUL.md IDENTITY.md AGENTS.md SKILLS.md TOOLS.md HEARTBEAT.md; do
+      if [ ! -f "$AGENT_WORKSPACE/$FILE" ] && [ -f "$AGENT_TEMPLATES_DIR/$AGENT_ID/$FILE" ]; then
+        cp "$AGENT_TEMPLATES_DIR/$AGENT_ID/$FILE" "$AGENT_WORKSPACE/$FILE"
+      fi
+    done
+  fi
+done
+
+# ============================================================
 # RESTORE FROM R2 BACKUP
 # ============================================================
 # Check if R2 backup exists by looking for openclaw.json
