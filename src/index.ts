@@ -28,7 +28,7 @@ import { getSandbox, Sandbox, type SandboxOptions } from '@cloudflare/sandbox';
 import type { AppEnv, OpenClawEnv } from './types';
 import { OPENCLAW_PORT } from './config';
 import { createAccessMiddleware } from './auth';
-import { ensureOpenClawGateway, findExistingOpenClawProcess, syncToR2 } from './gateway';
+import { ensureOpenClawGateway, findExistingOpenClawProcess, syncToR2, delegateTasks } from './gateway';
 import { publicRoutes, api, adminUi, debug, cdp } from './routes';
 import loadingPageHtml from './assets/loading.html';
 import configErrorHtml from './assets/config-error.html';
@@ -405,13 +405,24 @@ async function scheduled(
   const options = buildSandboxOptions(env);
   const sandbox = getSandbox(env.Sandbox, 'openclaw', options);
 
+  // 1. Sync to R2 for persistence
   console.log('[cron] Starting backup sync to R2...');
-  const result = await syncToR2(sandbox, env);
+  const syncResult = await syncToR2(sandbox, env);
   
-  if (result.success) {
-    console.log('[cron] Backup sync completed successfully at', result.lastSync);
+  if (syncResult.success) {
+    console.log('[cron] Backup sync completed at', syncResult.lastSync);
   } else {
-    console.error('[cron] Backup sync failed:', result.error, result.details || '');
+    console.error('[cron] Backup sync failed:', syncResult.error, syncResult.details || '');
+  }
+
+  // 2. Delegate tasks from Mission Control
+  console.log('[cron] Checking Mission Control for tasks...');
+  const delegationResult = await delegateTasks(sandbox, env);
+  
+  if (delegationResult.success) {
+    console.log('[cron] Task delegation completed, sent', delegationResult.notificationsSent, 'notification(s)');
+  } else {
+    console.error('[cron] Task delegation failed:', delegationResult.errors.join(', '));
   }
 }
 

@@ -41,6 +41,8 @@ export interface OpenClawEnv {
   BROWSER?: Fetcher;
   CDP_SECRET?: string; // Shared secret for CDP endpoint authentication
   WORKER_URL?: string; // Public URL of the worker (for CDP endpoint)
+  // Mission Control integration
+  CONVEX_URL?: string; // Convex deployment URL for task delegation
 }
 
 /**

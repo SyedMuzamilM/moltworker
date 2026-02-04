@@ -498,29 +498,9 @@ EOFNODE
 # ============================================================
 # START NOTIFICATION DAEMON (if Convex URL is set)
 # ============================================================
-if [ -n "$CONVEX_URL" ]; then
-    echo "Starting Mission Control Notification Daemon..."
-    echo "Convex URL: $CONVEX_URL"
-    
-    # Check if daemon is already running
-    if pgrep -f "daemon/notifications.js" > /dev/null 2>&1; then
-        echo "Notification daemon already running"
-    else
-        # Start daemon in background
-        nohup node /root/openclaw/daemon/notifications.js > /var/log/mc-notifications.log 2>&1 &
-        echo $! > /tmp/mc-notification-daemon.pid
-        echo "Notification daemon started (PID: $!)"
-    fi
-else
-    echo "Note: CONVEX_URL not set, notification daemon not started"
-    echo "      Set CONVEX_URL to enable Mission Control notifications"
-fi
-
-echo ""
-
-# ============================================================
 # START GATEWAY
 # ============================================================
+# Note: Mission Control task delegation is handled by the Worker's cron trigger
 # Note: R2 backup sync is handled by the Worker's cron trigger
 echo "Starting OpenClaw Gateway..."
 echo "Gateway will be available on port 18789"
