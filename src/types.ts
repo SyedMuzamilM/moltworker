@@ -43,6 +43,7 @@ export interface OpenClawEnv {
   WORKER_URL?: string; // Public URL of the worker (for CDP endpoint)
   // Mission Control integration
   CONVEX_URL?: string; // Convex deployment URL for task delegation
+  CONVEX_ADMIN_KEY?: string; // Optional Convex admin key for mutations
 }
 
 /**

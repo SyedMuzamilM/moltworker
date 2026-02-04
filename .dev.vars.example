@@ -24,3 +24,7 @@ MOLTBOT_GATEWAY_TOKEN=dev-token-change-in-prod
 # CDP (Chrome DevTools Protocol) configuration for browser automation
 # CDP_SECRET=shared-secret-for-cdp-auth
 # WORKER_URL=https://your-worker.example.com
+
+# Mission Control (Convex) integration
+# CONVEX_URL=https://your-convex-deployment-url
+# CONVEX_ADMIN_KEY=optional-convex-admin-key

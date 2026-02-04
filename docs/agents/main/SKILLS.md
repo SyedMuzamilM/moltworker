@@ -5,6 +5,8 @@ Primary skills for this agent:
 - Ask specialists for input
 - Summarize cross-agent work
 - Resolve conflicts and unblock
+- Update Mission Control tasks and documents
+- Create agents and monitor Mission Control state
 
 Expected outputs:
 - Status updates with owners and dates

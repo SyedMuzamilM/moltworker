@@ -49,6 +49,8 @@ export function buildEnvVars(env: OpenClawEnv): Record<string, string> {
   if (env.SLACK_APP_TOKEN) envVars.SLACK_APP_TOKEN = env.SLACK_APP_TOKEN;
   if (env.CDP_SECRET) envVars.CDP_SECRET = env.CDP_SECRET;
   if (env.WORKER_URL) envVars.WORKER_URL = env.WORKER_URL;
+  if (env.CONVEX_URL) envVars.CONVEX_URL = env.CONVEX_URL;
+  if (env.CONVEX_ADMIN_KEY) envVars.CONVEX_ADMIN_KEY = env.CONVEX_ADMIN_KEY;
 
   return envVars;
 }
