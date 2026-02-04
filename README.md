@@ -393,12 +393,14 @@ This worker includes built-in support for [Mission Control](https://github.com/m
 
 ### What it does
 
-When `CONVEX_URL` is configured, a notification daemon automatically starts alongside the OpenClaw gateway:
+When `CONVEX_URL` is configured, the Worker's cron trigger (every 5 minutes) will:
 
-- **Polls Convex every 2 seconds** for undelivered notifications
-- **Sends notifications to agents** via `openclaw sessions send`
-- **Supports @mentions** - When you @Vision in a task comment, Vision gets notified
-- **Thread subscriptions** - Agents auto-subscribe to tasks they interact with
+- **Check for assigned tasks** - Notify agents about tasks they need to work on
+- **Check for @mentions** - When you @Vision in a task comment, Vision gets notified
+- **Check for review tasks** - Notify Jarvis about tasks needing approval
+- **Check for blocked tasks** - Alert Jarvis about tasks that are stuck
+
+This uses a cron-based approach (like the article's heartbeat system) rather than a continuous daemon.
 
 ### Setup
 
@@ -417,30 +419,24 @@ npx wrangler secret put CONVEX_URL
 npm run deploy
 ```
 
-The notification daemon will start automatically on container startup.
-
 ### How it works
 
 ```
-User posts comment with @Vision in Mission Control
+Cron triggers every 5 minutes (Worker)
          ↓
-Notification created in Convex (undelivered)
+Query Convex for:
+  - Tasks assigned to each agent
+  - Recent @mentions in messages
+  - Tasks needing review
+  - Blocked tasks
          ↓
-Daemon polls Convex every 2s (inside Cloudflare Sandbox)
+For each notification:
+  openclaw sessions send --session "agent:..."
          ↓
-Finds notification for Vision
-         ↓
-Sends: openclaw sessions send --session "agent:seo-analyst:main"
-         ↓
-Vision receives message in their session
+Agent receives message in their session
 ```
 
-### Viewing daemon logs
-
-```bash
-# SSH into the container via admin UI
-cat /var/log/mc-notifications.log
-```
+This matches the "heartbeat" architecture from the Mission Control article where agents wake up periodically to check for work.
 
 ## Security Considerations
 
