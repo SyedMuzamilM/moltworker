@@ -1,10 +1,6 @@
-import AdminPage from './pages/AdminPage'
+import ControlRoom from './pages/ControlRoom'
 import './App.css'
 
 export default function App() {
-  return (
-    <div className="app">
-      <AdminPage />
-    </div>
-  )
+  return <ControlRoom />
 }
